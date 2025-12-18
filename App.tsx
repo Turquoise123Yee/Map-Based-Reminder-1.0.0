@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Task, UrgencyLevel, GeoLocation } from './types';
 import MapView from './components/MapView';
 import ArchivePage from './components/ArchivePage';
+import TaskListView from './components/TaskListView';
 import TaskModal from './components/TaskModal';
 import { getSmartTaskAdvice } from './services/geminiService';
-import { MapPin, History, Sparkles } from 'lucide-react';
+import { MapPin, History, Sparkles, LayoutList } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [activePage, setActivePage] = useState<'home' | 'archive'>('home');
+  const [activePage, setActivePage] = useState<'home' | 'list' | 'archive'>('home');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -76,8 +77,17 @@ const App: React.FC = () => {
   };
 
   const deleteTask = (taskId: string) => setTasks(tasks.filter(t => t.id !== taskId));
+  
+  const deleteCompletedTask = (taskId: string) => {
+    setCompletedTasks(completedTasks.filter(t => t.id !== taskId));
+  };
+
   const updateTaskUrgency = (taskId: string, newUrgency: UrgencyLevel) => {
     setTasks(tasks.map(t => (t.id === taskId ? { ...t, urgency: newUrgency } : t)));
+  };
+
+  const updateTaskDetails = (taskId: string, updates: { urgency: UrgencyLevel; note?: string }) => {
+    setTasks(tasks.map(t => (t.id === taskId ? { ...t, ...updates } : t)));
   };
 
   // 数据备份模块
@@ -129,7 +139,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="flex-1 relative overflow-hidden bg-white">
-        {activePage === 'home' ? (
+        {activePage === 'home' && (
           <MapView 
             tasks={tasks} 
             onMapClick={handleMapClick} 
@@ -137,15 +147,26 @@ const App: React.FC = () => {
             onDelete={deleteTask}
             onUpdateUrgency={updateTaskUrgency}
           />
-        ) : (
+        )}
+        
+        {activePage === 'list' && (
+          <TaskListView
+            tasks={tasks}
+            onComplete={completeTask}
+            onUpdateTask={updateTaskDetails}
+          />
+        )}
+
+        {activePage === 'archive' && (
           <ArchivePage 
             completedTasks={completedTasks} 
             onExport={handleExportData}
             onImport={handleImportData}
+            onDelete={deleteCompletedTask}
           />
         )}
 
-        {/* AI Insight Overlay */}
+        {/* AI Insight Overlay - Only on Map */}
         {(aiAdvice || loadingAdvice) && activePage === 'home' && (
           <div className="absolute top-6 left-6 right-6 z-40">
             <div className="bg-white/90 backdrop-blur-2xl border border-white/40 shadow-2xl p-5 rounded-[2rem] flex gap-4 items-center animate-in slide-in-from-top-6 duration-700">
@@ -163,18 +184,26 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <nav className="bg-white/80 backdrop-blur-xl border-t border-gray-100 px-10 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] flex justify-around items-center z-20 shrink-0">
+      <nav className="bg-white/80 backdrop-blur-xl border-t border-gray-100 px-6 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] flex justify-between items-center z-20 shrink-0">
         <button
           onClick={() => setActivePage('home')}
-          className={`flex flex-col items-center gap-1.5 transition-all ${activePage === 'home' ? 'text-[#0EC0A6]' : 'text-gray-300'}`}
+          className={`flex-1 flex flex-col items-center gap-1.5 transition-all ${activePage === 'home' ? 'text-[#0EC0A6]' : 'text-gray-300'}`}
         >
           <MapPin size={26} fill={activePage === 'home' ? 'currentColor' : 'none'} strokeWidth={activePage === 'home' ? 1.5 : 2} />
           <span className="text-[11px] font-medium">地图事项</span>
         </button>
 
         <button
+          onClick={() => setActivePage('list')}
+          className={`flex-1 flex flex-col items-center gap-1.5 transition-all ${activePage === 'list' ? 'text-[#0EC0A6]' : 'text-gray-300'}`}
+        >
+          <LayoutList size={26} strokeWidth={2} />
+          <span className="text-[11px] font-medium">清单</span>
+        </button>
+
+        <button
           onClick={() => setActivePage('archive')}
-          className={`flex flex-col items-center gap-1.5 transition-all ${activePage === 'archive' ? 'text-[#0EC0A6]' : 'text-gray-300'}`}
+          className={`flex-1 flex flex-col items-center gap-1.5 transition-all ${activePage === 'archive' ? 'text-[#0EC0A6]' : 'text-gray-300'}`}
         >
           <History size={26} strokeWidth={2} />
           <span className="text-[11px] font-medium">归档历史</span>

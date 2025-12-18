@@ -2,17 +2,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Task, URGENCY_CONFIG } from '../types';
-import { Map as MapIcon, List, Calendar, MapPin, CheckCircle, Filter, Download, Upload } from 'lucide-react';
+import { Map as MapIcon, List, Calendar, MapPin, CheckCircle, Filter, Download, Upload, Trash2 } from 'lucide-react';
 
 interface ArchivePageProps {
   completedTasks: Task[];
   onExport: () => void;
   onImport: (file: File) => void;
+  onDelete: (taskId: string) => void;
 }
 
 type FilterType = 'all' | 'today' | 'week' | 'month';
 
-const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks, onExport, onImport }) => {
+const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks, onExport, onImport, onDelete }) => {
   const [view, setView] = useState<'map' | 'list'>('list');
   const [filter, setFilter] = useState<FilterType>('all');
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -239,10 +240,21 @@ const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks, onExport, onI
                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${URGENCY_CONFIG[task.urgency].color} text-white shadow-inner`}>
                         <CheckCircle size={28} />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-black text-gray-900 text-lg leading-tight">{task.name}</h4>
-                          <span className="text-[8px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full border border-gray-100 font-black tracking-tighter">ARCHIVED</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="font-black text-gray-900 text-lg leading-tight flex-1 break-words">{task.name}</h4>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[8px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full border border-gray-100 font-black tracking-tighter">ARCHIVED</span>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if(window.confirm('确认删除此归档记录？')) onDelete(task.id);
+                              }}
+                              className="w-6 h-6 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-y-1.5 text-[11px] font-bold text-gray-500">
                           <div className="flex items-center gap-2">

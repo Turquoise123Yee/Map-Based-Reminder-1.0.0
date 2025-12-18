@@ -20,6 +20,7 @@ export interface Task {
   createdAt: number;
   completedAt?: number;
   isCompleted: boolean;
+  note?: string; // 新增备注字段
 }
 
 export const URGENCY_CONFIG = {
