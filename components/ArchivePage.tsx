@@ -2,19 +2,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Task, URGENCY_CONFIG } from '../types';
-import { Map as MapIcon, List, Calendar, MapPin, CheckCircle, Filter } from 'lucide-react';
+import { Map as MapIcon, List, Calendar, MapPin, CheckCircle, Filter, Download, Upload } from 'lucide-react';
 
 interface ArchivePageProps {
   completedTasks: Task[];
+  onExport: () => void;
+  onImport: (file: File) => void;
 }
 
 type FilterType = 'all' | 'today' | 'week' | 'month';
 
-const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks }) => {
+const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks, onExport, onImport }) => {
   const [view, setView] = useState<'map' | 'list'>('list');
   const [filter, setFilter] = useState<FilterType>('all');
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sorting
   const sortedTasks = [...completedTasks].sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
@@ -75,10 +78,9 @@ const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks }) => {
     const date = new Date(timestamp);
     const month = date.getMonth() + 1;
     
-    // Calculate Week of Month (Standard row-based calculation)
+    // Calculate Week of Month
     const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-    const firstDayWeekday = firstDayOfMonth.getDay(); // 0 (Sun) to 6 (Sat)
-    // Offset day of month by the weekday of the 1st to place it in the grid
+    const firstDayWeekday = firstDayOfMonth.getDay();
     const weekNum = Math.ceil((date.getDate() + firstDayWeekday) / 7);
 
     return `${month}月 第${weekNum}周`;
@@ -86,10 +88,7 @@ const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks }) => {
 
   // --- Map Effect ---
   useEffect(() => {
-    // Only run if view is map and we have a container
     if (view === 'map' && mapContainerRef.current) {
-        
-      // Initialize map if it doesn't exist
       if (!mapRef.current) {
         const map = L.map(mapContainerRef.current, {
           zoomControl: false,
@@ -104,15 +103,12 @@ const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks }) => {
       }
       
       const map = mapRef.current;
-
-      // Clear existing markers to allow updates
       map.eachLayer((layer) => {
          if (layer instanceof L.Marker) {
              layer.remove();
          }
       });
 
-      // Add markers for filtered tasks
       const group = L.featureGroup();
       filteredTasks.forEach(task => {
         const icon = L.divIcon({
@@ -142,45 +138,76 @@ const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks }) => {
       }
     }
 
-    // Cleanup when unmounting or switching view away from map
     return () => {
       if (mapRef.current && view !== 'map') {
         mapRef.current.remove();
         mapRef.current = null;
       }
     };
-  }, [view, filter, completedTasks]); // Re-run when filter changes
+  }, [view, filter, completedTasks]);
 
-  // Helper var to track grouping in list render
   let lastGroupTitle = '';
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onImport(e.target.files[0]);
+      e.target.value = ''; // Reset input
+    }
+  };
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-      <div className="p-6 bg-white border-b flex justify-between items-center sticky top-0 z-10 shadow-sm">
-        <div>
-          <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-            History
-          </h2>
-          <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Archived Tasks</p>
+      <div className="p-6 bg-white border-b sticky top-0 z-10 shadow-sm space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+              History
+            </h2>
+            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Archived Tasks</p>
+          </div>
+          <div className="flex gap-2">
+             <button 
+               onClick={onExport}
+               className="p-2 bg-gray-100 rounded-xl text-gray-500 hover:text-[#0EC0A6] hover:bg-[#0EC0A6]/10 transition-colors"
+               title="备份数据"
+             >
+               <Download size={18} />
+             </button>
+             <button 
+               onClick={() => fileInputRef.current?.click()}
+               className="p-2 bg-gray-100 rounded-xl text-gray-500 hover:text-[#0EC0A6] hover:bg-[#0EC0A6]/10 transition-colors"
+               title="恢复数据"
+             >
+               <Upload size={18} />
+             </button>
+             <input 
+               type="file" 
+               ref={fileInputRef} 
+               onChange={handleFileChange} 
+               accept=".json" 
+               className="hidden" 
+             />
+          </div>
         </div>
+
         <div className="flex bg-gray-100 p-1 rounded-2xl">
           <button
             onClick={() => setView('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
-              view === 'list' ? 'bg-white shadow-sm text-teal-600 scale-105' : 'text-gray-500 hover:text-gray-700'
+            className={`flex-1 flex justify-center items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              view === 'list' ? 'bg-white shadow-sm text-teal-600 scale-100' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <List size={16} />
-            LIST
+            LIST VIEW
           </button>
           <button
             onClick={() => setView('map')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
-              view === 'map' ? 'bg-white shadow-sm text-teal-600 scale-105' : 'text-gray-500 hover:text-gray-700'
+            className={`flex-1 flex justify-center items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              view === 'map' ? 'bg-white shadow-sm text-teal-600 scale-100' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <MapIcon size={16} />
-            MAP
+            MAP VIEW
           </button>
         </div>
       </div>
@@ -236,13 +263,11 @@ const ArchivePage: React.FC<ArchivePageProps> = ({ completedTasks }) => {
           </div>
         ) : (
           <div className="w-full h-full relative">
-             {/* Map Filter Control */}
              <div className="absolute top-4 left-4 z-[500] flex flex-col gap-2">
               <div className="relative group">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-teal-600">
                   <Filter size={14} />
                 </div>
-                {/* Increased to text-sm (120% of previous text-xs) */}
                 <select 
                   value={filter}
                   onChange={(e) => setFilter(e.target.value as FilterType)}

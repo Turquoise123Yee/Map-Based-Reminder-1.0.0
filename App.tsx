@@ -15,18 +15,32 @@ const App: React.FC = () => {
   const [pendingLocation, setPendingLocation] = useState<GeoLocation | null>(null);
   const [aiAdvice, setAiAdvice] = useState<string | null>(null);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
+  
+  // 关键修复：增加 isLoaded 状态，防止初始空数组覆盖本地存储
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const savedTasks = localStorage.getItem('hk_map_tasks');
-    const savedArchive = localStorage.getItem('hk_map_archive');
-    if (savedTasks) setTasks(JSON.parse(savedTasks));
-    if (savedArchive) setCompletedTasks(JSON.parse(savedArchive));
+    const loadData = () => {
+      try {
+        const savedTasks = localStorage.getItem('hk_map_tasks');
+        const savedArchive = localStorage.getItem('hk_map_archive');
+        if (savedTasks) setTasks(JSON.parse(savedTasks));
+        if (savedArchive) setCompletedTasks(JSON.parse(savedArchive));
+      } catch (e) {
+        console.error("Failed to load data", e);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    loadData();
   }, []);
 
   useEffect(() => {
+    // 只有当数据加载完毕后，才允许写入 LocalStorage
+    if (!isLoaded) return;
     localStorage.setItem('hk_map_tasks', JSON.stringify(tasks));
     localStorage.setItem('hk_map_archive', JSON.stringify(completedTasks));
-  }, [tasks, completedTasks]);
+  }, [tasks, completedTasks, isLoaded]);
 
   const handleMapClick = (lat: number, lng: number) => {
     setPendingLocation({ lat, lng });
@@ -66,11 +80,44 @@ const App: React.FC = () => {
     setTasks(tasks.map(t => (t.id === taskId ? { ...t, urgency: newUrgency } : t)));
   };
 
+  // 数据备份模块
+  const handleExportData = () => {
+    const data = {
+      tasks,
+      completedTasks,
+      exportDate: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `anny-todo-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = e.target?.result as string;
+        const data = JSON.parse(result);
+        if (data.tasks && Array.isArray(data.tasks)) setTasks(data.tasks);
+        if (data.completedTasks && Array.isArray(data.completedTasks)) setCompletedTasks(data.completedTasks);
+        alert('数据恢复成功！');
+      } catch (err) {
+        alert('文件格式错误，无法恢复。');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-2xl mx-auto bg-[#F2F2F7] relative overflow-hidden font-sans">
       <header className="bg-white/80 backdrop-blur-xl px-6 py-5 pt-[calc(1.25rem+env(safe-area-inset-top))] border-b border-gray-100 flex items-center justify-between relative z-20 shrink-0">
         <div className="w-10"></div>
-        {/* 恢复为绿色加粗版标题 */}
         <h1 className="text-2xl font-black text-[#0EC0A6] tracking-tight">Anny's Todo</h1>
         <div className="w-10 flex justify-end">
           {tasks.length > 0 && (
@@ -91,10 +138,14 @@ const App: React.FC = () => {
             onUpdateUrgency={updateTaskUrgency}
           />
         ) : (
-          <ArchivePage completedTasks={completedTasks} />
+          <ArchivePage 
+            completedTasks={completedTasks} 
+            onExport={handleExportData}
+            onImport={handleImportData}
+          />
         )}
 
-        {/* AI Insight Overlay - iOS Card Style */}
+        {/* AI Insight Overlay */}
         {(aiAdvice || loadingAdvice) && activePage === 'home' && (
           <div className="absolute top-6 left-6 right-6 z-40">
             <div className="bg-white/90 backdrop-blur-2xl border border-white/40 shadow-2xl p-5 rounded-[2rem] flex gap-4 items-center animate-in slide-in-from-top-6 duration-700">
