@@ -190,7 +190,7 @@ const App: React.FC = () => {
           className={`flex-1 flex flex-col items-center gap-1.5 transition-all ${activePage === 'home' ? 'text-[#0EC0A6]' : 'text-gray-300'}`}
         >
           <MapPin size={26} fill={activePage === 'home' ? 'currentColor' : 'none'} strokeWidth={activePage === 'home' ? 1.5 : 2} />
-          <span className="text-[11px] font-medium">地图事项</span>
+          <span className="text-[11px] font-medium">地图</span>
         </button>
 
         <button
@@ -206,7 +206,7 @@ const App: React.FC = () => {
           className={`flex-1 flex flex-col items-center gap-1.5 transition-all ${activePage === 'archive' ? 'text-[#0EC0A6]' : 'text-gray-300'}`}
         >
           <History size={26} strokeWidth={2} />
-          <span className="text-[11px] font-medium">归档历史</span>
+          <span className="text-[11px] font-medium">历史</span>
         </button>
       </nav>
 
