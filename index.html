@@ -4,7 +4,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>HK Map Todo Tracker</title>
+  <title>Anny's Todo</title>
+
+  <!-- ============================================================ -->
+  <!-- 如果你把图片放在了代码所在的文件夹里，请直接写文件名 -->
+  
+  <!-- 1. 浏览器标签页图标 -->
+  <link rel="icon" type="image/png" href="icon.png">
+  icon
+  <!-- 2. 手机桌面图标 -->icon
+  <link rel="apple-touch-icon" href="icon.png">
+  <!-- ============================================================ -->
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Anny's Todo">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script type="importmap">
@@ -21,20 +36,48 @@
 }
 </script>
 <style>
-  body {
+  :root {
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+  }
+  
+  html, body {
     background-color: #f8f9fa;
     color: #000;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
   }
+
+  #root {
+    height: 100%;
+    width: 100%;
+  }
+
   .leaflet-container {
     width: 100%;
     height: 100%;
     background: #f8f9fa;
   }
+
   .custom-div-icon {
     background: none;
     border: none;
   }
-  /* Hide scrollbar for cleaner UI */
+
+  .pb-safe {
+    padding-bottom: var(--sab);
+  }
+
+  .pt-safe {
+    padding-top: var(--sat);
+  }
+
   ::-webkit-scrollbar {
     width: 0px;
     background: transparent;
@@ -42,9 +85,8 @@
 </style>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body class="overflow-hidden">
+<body>
   <div id="root"></div>
-  <!-- 添加入口文件引用 -->
   <script type="module" src="./index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>

@@ -85,15 +85,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto bg-white shadow-2xl relative">
-      {/* Header - Centered Title */}
-      <header className="bg-white px-6 py-6 border-b flex items-center justify-center relative z-20 shrink-0">
+    // 使用 h-[100dvh] 代替 h-screen 以适应移动端动态工具栏
+    <div className="flex flex-col h-[100dvh] w-full max-w-2xl mx-auto bg-white shadow-2xl relative overflow-hidden">
+      {/* Header - 加入 pt-safe 确保不被刘海屏遮挡 */}
+      <header className="bg-white px-6 py-4 pt-[calc(1rem+env(safe-area-inset-top))] border-b flex items-center justify-center relative z-20 shrink-0">
         <h1 className="text-2xl font-black text-teal-600 tracking-tight absolute left-1/2 -translate-x-1/2">Anny's to do</h1>
         
         <div className="absolute right-6 flex items-center gap-2">
           {tasks.length > 0 && (
             <span className="bg-teal-100 text-teal-700 text-[10px] font-black px-2 py-1 rounded-full animate-pulse">
-              {tasks.length} 个进行中
+              {tasks.length}
             </span>
           )}
         </div>
@@ -137,8 +138,8 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Navigation Bar */}
-      <nav className="bg-white border-t px-6 py-4 flex justify-around items-center z-20 shrink-0 pb-safe">
+      {/* Navigation Bar - 增加底部的安全区域占位 */}
+      <nav className="bg-white border-t px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex justify-around items-center z-20 shrink-0">
         <button
           onClick={() => setActivePage('home')}
           className={`flex flex-col items-center gap-1 transition-all ${
