@@ -1,0 +1,7 @@
+{
+  "name": "HK Map Todo Tracker",
+  "description": "A location-based task management app for Hong Kong, featuring an interactive map for placing time-sensitive todos and a detailed archive for historical tracking.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
