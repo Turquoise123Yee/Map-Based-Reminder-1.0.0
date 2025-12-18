@@ -25,26 +25,30 @@ export interface Task {
 export const URGENCY_CONFIG = {
   [UrgencyLevel.TOMORROW]: {
     label: '立刻',
-    color: 'bg-teal-900',
-    borderColor: 'border-teal-900',
-    dotColor: '#134e4a'
+    color: 'bg-[#0EC0A6]',
+    borderColor: 'border-[#0EC0A6]',
+    dotColor: '#0EC0A6',
+    textColor: 'text-white'
   },
   [UrgencyLevel.TWO_DAYS]: {
     label: '两天内',
-    color: 'bg-teal-600',
-    borderColor: 'border-teal-600',
-    dotColor: '#0d9488'
+    color: 'bg-[#0EC0A6]/80',
+    borderColor: 'border-[#0EC0A6]/80',
+    dotColor: 'rgba(14, 192, 166, 0.8)',
+    textColor: 'text-white'
   },
   [UrgencyLevel.THIS_WEEK]: {
     label: '本周内',
-    color: 'bg-teal-300',
-    borderColor: 'border-teal-300',
-    dotColor: '#5eead4'
+    color: 'bg-[#0EC0A6]/40',
+    borderColor: 'border-[#0EC0A6]/40',
+    dotColor: 'rgba(14, 192, 166, 0.4)',
+    textColor: 'text-[#0B9985]'
   },
   [UrgencyLevel.NEXT_WEEK]: {
     label: '下周',
-    color: 'bg-transparent',
-    borderColor: 'border-black',
-    dotColor: 'transparent'
+    color: 'bg-white',
+    borderColor: 'border-[#0EC0A6]',
+    dotColor: '#FFFFFF',
+    textColor: 'text-[#0EC0A6]'
   }
 };
