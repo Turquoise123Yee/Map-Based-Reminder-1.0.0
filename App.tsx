@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [pendingLocation, setPendingLocation] = useState<GeoLocation | null>(null);
   const [aiAdvice, setAiAdvice] = useState<string | null>(null);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
+  const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
   
   // 关键修复：增加 isLoaded 状态，防止初始空数组覆盖本地存储
   const [isLoaded, setIsLoaded] = useState(false);
@@ -44,6 +45,8 @@ const App: React.FC = () => {
   }, [tasks, completedTasks, isLoaded]);
 
   const handleMapClick = (lat: number, lng: number) => {
+    // 如果正在移动任务，点击地图不触发新增弹窗
+    if (movingTaskId) return;
     setPendingLocation({ lat, lng });
     setModalOpen(true);
   };
@@ -90,6 +93,22 @@ const App: React.FC = () => {
     setTasks(tasks.map(t => (t.id === taskId ? { ...t, ...updates } : t)));
   };
 
+  // --- 移动任务逻辑 ---
+  const handleMoveTaskStart = (taskId: string) => {
+    setMovingTaskId(taskId);
+  };
+
+  const handleMoveTaskConfirm = (lat: number, lng: number) => {
+    if (movingTaskId) {
+      setTasks(tasks.map(t => t.id === movingTaskId ? { ...t, location: { ...t.location, lat, lng } } : t));
+      setMovingTaskId(null);
+    }
+  };
+
+  const handleMoveTaskCancel = () => {
+    setMovingTaskId(null);
+  };
+
   // 数据备份模块
   const handleExportData = () => {
     const data = {
@@ -126,7 +145,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-2xl mx-auto bg-[#F2F2F7] relative overflow-hidden font-sans">
-      <header className="bg-white/80 backdrop-blur-xl px-6 py-5 pt-[calc(1.25rem+env(safe-area-inset-top))] border-b border-gray-100 flex items-center justify-between relative z-20 shrink-0">
+      <header className={`bg-white/80 backdrop-blur-xl px-6 py-5 pt-[calc(1.25rem+env(safe-area-inset-top))] border-b border-gray-100 flex items-center justify-between relative z-20 shrink-0 transition-transform duration-300 ${movingTaskId ? '-translate-y-full' : 'translate-y-0'}`}>
         <div className="w-10"></div>
         <h1 className="text-2xl font-black text-[#0EC0A6] tracking-tight">Anny's Todo</h1>
         <div className="w-10 flex justify-end">
@@ -146,6 +165,11 @@ const App: React.FC = () => {
             onComplete={completeTask}
             onDelete={deleteTask}
             onUpdateUrgency={updateTaskUrgency}
+            // 移动相关 Props
+            movingTaskId={movingTaskId}
+            onMoveTaskStart={handleMoveTaskStart}
+            onMoveTaskConfirm={handleMoveTaskConfirm}
+            onMoveTaskCancel={handleMoveTaskCancel}
           />
         )}
         
@@ -167,7 +191,7 @@ const App: React.FC = () => {
         )}
 
         {/* AI Insight Overlay - Only on Map */}
-        {(aiAdvice || loadingAdvice) && activePage === 'home' && (
+        {(aiAdvice || loadingAdvice) && activePage === 'home' && !movingTaskId && (
           <div className="absolute top-6 left-6 right-6 z-40">
             <div className="bg-white/90 backdrop-blur-2xl border border-white/40 shadow-2xl p-5 rounded-[2rem] flex gap-4 items-center animate-in slide-in-from-top-6 duration-700">
               <div className="w-10 h-10 bg-[#0EC0A6] rounded-2xl flex items-center justify-center text-white shrink-0">
@@ -184,7 +208,7 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <nav className="bg-white/80 backdrop-blur-xl border-t border-gray-100 px-6 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] flex justify-between items-center z-20 shrink-0">
+      <nav className={`bg-white/80 backdrop-blur-xl border-t border-gray-100 px-6 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] flex justify-between items-center z-20 shrink-0 transition-transform duration-300 ${movingTaskId ? 'translate-y-full' : 'translate-y-0'}`}>
         <button
           onClick={() => setActivePage('home')}
           className={`flex-1 flex flex-col items-center gap-1.5 transition-all ${activePage === 'home' ? 'text-[#0EC0A6]' : 'text-gray-300'}`}
